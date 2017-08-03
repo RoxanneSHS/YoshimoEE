@@ -85,8 +85,8 @@ COMPILE ~yoshimo/dialogue/yoshj.d~
 // Compiling scripts...
 EXTEND_BOTTOM ~yoshimo.bcs~ ~yoshimo/scripts/yoshimo.baf~ EVALUATE_BUFFER
 
-// Adding new triggers, changing timing etc for existing Yoshimo talks NOTE Incompatible with RE mod
-/*COPY_EXISTING ~byoshim.dlg~ ~override~
+// Adding new triggers, changing timing etc for existing Yoshimo talks NOTE must be installed prior RE mod
+COPY_EXISTING ~byoshim.dlg~ ~override~
   DECOMPILE_DLG_TO_D
     REPLACE_TEXTUALLY ~GlobalTimerExpired("YoshimoTalksPC","GLOBAL")~
                       ~RealGlobalTimerExpired("YoshimoTalksPC","GLOBAL")~ // Ensuring talk #1 triggers
@@ -116,7 +116,7 @@ COPY_EXISTING ~yoshimo.bcs~ ~override~
     REPLACE_TEXTUALLY ~GlobalTimerExpired("YoshimoTalksPC","GLOBAL")~ ~RealGlobalTimerExpired("YoshimoTalksPC","GLOBAL")~
     REPLACE_TEXTUALLY ~GlobalTimerExpired("YoshimoTalksPC2","GLOBAL")~ ~RealGlobalTimerExpired("I#YoshimoTalksPC2","GLOBAL")~
   COMPILE_BAF_TO_BCS
-  BUT_ONLY_IF_IT_CHANGES*/
+  BUT_ONLY_IF_IT_CHANGES
   
 // Audio
 COPY ~yoshimo/audio/i#blank.wav~ ~override~
