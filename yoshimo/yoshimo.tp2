@@ -1,0 +1,122 @@
+// --------------------------------------
+// Yoshimo Friendship Setup
+//
+// Version:   V4.0
+// Author(s): K'aeloree
+// --------------------------------------
+// Backup directory
+BACKUP ~yoshimo/backup~
+
+// Error reports sent to K'aeloree
+AUTHOR ~kae@spellholdstudios.net~
+
+// Version
+VERSION ~4.0~
+
+// Readme
+// Default to English readme if not found in the selected language
+README ~yoshimo/translations/%LANGUAGE%/yoshimofriendship.html~ ~yoshimo/yoshimofriendship.html~
+
+
+// Isaya : Additional check to support special characters for BGEE
+// Inspired by BGQE / Edwin Romance
+ALWAYS
+  ACTION_IF GAME_IS ~eet~ BEGIN
+    OUTER_SET bg2_chapter = 12
+  END ELSE BEGIN
+    OUTER_SET bg2_chapter = 0
+  END
+  OUTER_FOR (i=1; i<=10; i=i+1) BEGIN
+    OUTER_SET bg2_chapter = bg2_chapter + 1
+    OUTER_SPRINT name_source ~bg2_chapter_%i%~
+    OUTER_SET EVAL ~%name_source%~ = bg2_chapter
+  END
+
+  // We want this to happen only once
+  ACTION_IF !FILE_EXISTS ~%MOD_FOLDER%/translations/%LANGUAGE%/utf8.mrk~ BEGIN
+    ACTION_IF GAME_IS ~bg2ee~ THEN BEGIN
+      // Copies UTF8-encoded tra files over the normal ones, for use with AUTO_TRA
+      DEFINE_ACTION_FUNCTION autotra_workaround BEGIN
+        COPY ~%MOD_FOLDER%/translations/utf8/%LANGUAGE%~  ~%MOD_FOLDER%/translations/%LANGUAGE%~
+      END
+
+      LAF autotra_workaround END
+
+      // TRAs declared in LANGUAGE must be reloaded
+      LOAD_TRA "%MOD_FOLDER%/translations/%LANGUAGE%/setup.tra"
+    END
+    COPY_EXISTING sw1h01.itm ~%MOD_FOLDER%/translations/%LANGUAGE%/utf8.mrk~
+  END
+
+END //ALWAYS
+
+
+// Translations
+AUTO_TRA ~yoshimo/translations/%s~
+
+LANGUAGE ~English~
+         ~English~
+         ~yoshimo/translations/english/setup.tra~
+         
+LANGUAGE ~Polski~
+         ~Polski~
+         ~yoshimo/translations/polski/setup.tra~
+// Isaya : added French
+LANGUAGE ~Francais~
+         ~french~
+         ~yoshimo/translations/french/setup.tra~
+
+// --------------------------------------------
+// Yoshimo Friendship for BGII: SoA
+// --------------------------------------------
+// Component setup
+BEGIN @0
+
+// Adds custom IsValidForPartyDialogue state used throughout ninde
+APPEND ~STATE.IDS~ // adds custom IsValidForPartyDialogue state
+  ~0x80101FEF CD_STATE_NOTVALID~
+  UNLESS ~CD_STATE_NOTVALID~
+
+// Compiling dialogue...
+COMPILE ~yoshimo/dialogue/yoshj.d~
+  USING ~yoshimo/translations/english/yoshj.tra~
+  	~yoshimo/translations/%s/yoshj.tra~
+
+// Compiling scripts...
+EXTEND_BOTTOM ~yoshimo.bcs~ ~yoshimo/scripts/yoshimo.baf~ EVALUATE_BUFFER
+
+// Adding new triggers, changing timing etc for existing Yoshimo talks
+COPY_EXISTING ~byoshim.dlg~ ~override~
+  DECOMPILE_DLG_TO_D
+    REPLACE_TEXTUALLY ~GlobalTimerExpired("YoshimoTalksPC","GLOBAL")~
+                      ~RealGlobalTimerExpired("YoshimoTalksPC","GLOBAL")~ // Ensuring talk #1 triggers
+
+    REPLACE_TEXTUALLY ~SetGlobal("BYoshimo3","LOCALS",1)~
+                      ~RealSetGlobalTimer("I#YoshimoTalksPC2","GLOBAL",3600) SetGlobal("BYoshimo3","LOCALS",1)~ // Ensuring talk #2 triggers
+
+    REPLACE_TEXTUALLY ~GlobalTimerExpired("YoshimoTalksPC2","GLOBAL")~
+                      ~RealGlobalTimerExpired("I#YoshimoTalksPC2","GLOBAL")~ // Ensuring talk #2 triggers
+
+    REPLACE_TEXTUALLY ~SetGlobalTimer("YoshimoTalksPC2","GLOBAL",TEN_DAYS)~
+                      ~RealSetGlobalTimer("YoshimoTalksPC3","GLOBAL",3600) SetGlobal("I#Yoshimo_BY5","GLOBAL",1)~ // Ensuring talk #3 triggers, if it's meant to
+
+    REPLACE_TEXTUALLY ~Global("BYoshimo5","LOCALS",0)~
+                      ~Global("BYoshimo5","LOCALS",0) Global("I#Yoshimo_BY5","GLOBAL",2)~ // Changing triggers for talk #3 to ensure it triggers
+  COMPILE_D_TO_DLG
+  BUT_ONLY_IF_IT_CHANGES
+
+COPY_EXISTING ~yoshimo.dlg~ ~override~
+  DECOMPILE_DLG_TO_D
+    REPLACE_TEXTUALLY ~SetGlobalTimer("YoshimoTalksPC","GLOBAL",FIVE_DAYS)~ ~RealSetGlobalTimer("YoshimoTalksPC","GLOBAL",3600)~
+  COMPILE_D_TO_DLG
+  BUT_ONLY_IF_IT_CHANGES
+  
+COPY_EXISTING ~yoshimo.bcs~ ~override~
+  DECOMPILE_BCS_TO_BAF
+    REPLACE_TEXTUALLY ~GlobalTimerExpired("YoshimoTalksPC","GLOBAL")~ ~RealGlobalTimerExpired("YoshimoTalksPC","GLOBAL")~
+    REPLACE_TEXTUALLY ~GlobalTimerExpired("YoshimoTalksPC2","GLOBAL")~ ~RealGlobalTimerExpired("I#YoshimoTalksPC2","GLOBAL")~
+  COMPILE_BAF_TO_BCS
+  BUT_ONLY_IF_IT_CHANGES
+  
+// Audio
+COPY ~yoshimo/audio/i#blank.wav~ ~override~
