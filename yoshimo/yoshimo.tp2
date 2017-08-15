@@ -14,12 +14,11 @@ AUTHOR ~kae@spellholdstudios.net~
 VERSION ~4.0~
 
 // Readme
-// Default to English readme if not found in the selected language
-README ~yoshimo/translations/%LANGUAGE%/yoshimofriendship.html~ ~yoshimo/yoshimofriendship.html~
 
 
-// Isaya : Additional check to support special characters for BGEE
-// Inspired by BGQE / Edwin Romance
+// Translations
+AUTO_TRA ~yoshimo/translations/%s~
+
 ALWAYS
   ACTION_IF GAME_IS ~eet~ BEGIN
     OUTER_SET bg2_chapter = 12
@@ -32,27 +31,23 @@ ALWAYS
     OUTER_SET EVAL ~%name_source%~ = bg2_chapter
   END
 
-  // We want this to happen only once
-  ACTION_IF !FILE_EXISTS ~%MOD_FOLDER%/translations/%LANGUAGE%/utf8.mrk~ BEGIN
-    ACTION_IF GAME_IS ~bg2ee~ THEN BEGIN
-      // Copies UTF8-encoded tra files over the normal ones, for use with AUTO_TRA
-      DEFINE_ACTION_FUNCTION autotra_workaround BEGIN
-        COPY ~%MOD_FOLDER%/translations/utf8/%LANGUAGE%~  ~%MOD_FOLDER%/translations/%LANGUAGE%~
-      END
+  // No exception, everything needs to be converted
+  ACTION_DEFINE_ARRAY YoFrienoconvert BEGIN END
 
-      LAF autotra_workaround END
+  // any tra files used in LANGUAGE need to be reloaded after UTF-8 conversion
+  ACTION_DEFINE_ARRAY YoFriereload BEGIN Setup END
 
-      // TRAs declared in LANGUAGE must be reloaded
-      LOAD_TRA "%MOD_FOLDER%/translations/%LANGUAGE%/setup.tra"
-    END
-    COPY_EXISTING sw1h01.itm ~%MOD_FOLDER%/translations/%LANGUAGE%/utf8.mrk~
+  LAF HANDLE_CHARSETS
+    INT_VAR
+      infer_charsets = 1
+    STR_VAR
+      tra_path = EVAL ~%MOD_FOLDER%/Translations~
+      noconvert_array = YoFrienoconvert
+      reload_array = YoFriereload
   END
+END
 
-END //ALWAYS
-
-
-// Translations
-AUTO_TRA ~yoshimo/translations/%s~
+// Languages
 
 LANGUAGE ~English~
          ~English~
@@ -61,7 +56,7 @@ LANGUAGE ~English~
 LANGUAGE ~Polski~
          ~Polski~
          ~yoshimo/translations/polski/setup.tra~
-// Isaya : added French
+
 LANGUAGE ~Francais~
          ~french~
          ~yoshimo/translations/french/setup.tra~
