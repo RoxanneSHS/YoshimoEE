@@ -110,6 +110,14 @@ THEN
 END
 
 IF
+Global("I#YoshimoFriendTalks","GLOBAL",9)
+Global("WorkingForBodhi","GLOBAL",1)
+THEN
+  RESPONSE #100
+    IncrementGlobal("I#YoshimoFriendTalks","GLOBAL",1)
+END
+
+IF
     InParty(Myself)
     See(Player1)
     !StateCheck(Myself,CD_STATE_NOTVALID)
